@@ -2,8 +2,8 @@ from typing import Tuple
 
 import numpy as np
 
-from bounding_box import RandomBoundingBoxGenerator, BoundingBoxComposer
-from util import plot_uniform_image_montage, progress
+from intersects.bounding_box import RandomBoundingBoxGenerator, BoundingBoxComposer
+from intersects.util import plot_uniform_image_montage, progress
 
 
 # ----------------------------------------------------------------------------------------------------------------------
@@ -19,7 +19,7 @@ def rectangle_montage_demo(n_images: int = 100, n_boxes_per_image: int = 2, imag
         bounding_boxes = [box_generator() for _ in range(n_boxes_per_image)]
         images.append(np.array(box_composer.compose(boxes=bounding_boxes, image_size=image_size, are_filled=are_filled,
                                                     background_color=background_color, box_outline_width=1)))
-        titles.append("*" if box_composer.are_intersecting(bounding_boxes) else "")
+        titles.append("X" if box_composer.are_intersecting(bounding_boxes) else "")
 
     plot_uniform_image_montage(images=images, title='Rectangle Montage', numbering=titles)
 
