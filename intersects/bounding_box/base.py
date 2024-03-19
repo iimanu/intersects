@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Tuple, List
 
 
+# TODO - presumed BoundingBox lives over the integers, so we can actually check our presumptions with pixel_intersection
 # ----------------------------------------------------------------------------------------------------------------------
 #
 # ----------------------------------------------------------------------------------------------------------------------
@@ -77,7 +78,7 @@ class BoundingBox:
         """
         return (self.x2 - self.x1) == (self.y2 - self.y1)
 
-    def intersects(self, bbox: BoundingBox) -> bool:
+    def boundary_inclusive_intersection(self, bbox: BoundingBox) -> bool:
         """
         Determines if two bounding boxes intersect.
         """
@@ -90,8 +91,18 @@ class BoundingBox:
             return False
         return True  # If neither of the above, the bounding boxes intersect
 
-    def __and__(self, other: BoundingBox) -> bool:
-        return self.intersects(bbox=other)
+    def boundary_exclusive_intersection(self, bbox: BoundingBox) -> bool:
+        """
+        Determines if two bounding boxes intersect.
+        """
+        # Unpack the bounding boxes
+        x1_1, y1_1, x2_1, y2_1 = self.as_xyxy()
+        x1_2, y1_2, x2_2, y2_2 = bbox.as_xyxy()
+
+        # Check if I'm completely to the left or to the right of the bounding box, or completely above or below
+        if x1_1 >= x2_2 or x1_2 >= x2_1 or y1_1 >= y2_2 or y1_2 >= y2_1:
+            return False
+        return True  # If neither of the above, the bounding boxes intersect
 
 
 class ImageEmbeddedBoundingBox(BoundingBox):
@@ -108,16 +119,16 @@ class ImageEmbeddedBoundingBox(BoundingBox):
         Returns the subscript indices of the cells/pixels that the bounding box takes.
         """
         # Return subscript coordinates
-        return [(x, y) for x in range(self.x1, min(self.x2 + 1, self.image_width))
-                for y in range(self.y1, min(self.y2 + 1, self.image_height))]
+        return [(x, y) for x in range(self.x1, min(self.x2, self.image_width))
+                for y in range(self.y1, min(self.y2, self.image_height))]
 
     def linear_image_coordinates(self) -> List[int]:
         """
         Returns the linear indices of the cells/pixels that the bounding box takes, assuming row-major ordering.
         """
         # Calculate and return linear indices
-        return [y * self.image_width + x for x in range(self.x1, min(self.x2 + 1, self.image_width))
-                for y in range(self.y1, min(self.y2 + 1, self.image_height))]
+        return [y * self.image_width + x for x in range(self.x1, min(self.x2, self.image_width))
+                for y in range(self.y1, min(self.y2, self.image_height))]
 
     def pixel_intersects(self, bbox: ImageEmbeddedBoundingBox) -> bool:
         return bool(set(self.linear_image_coordinates()) & set(bbox.linear_image_coordinates()))

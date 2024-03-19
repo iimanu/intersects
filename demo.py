@@ -2,7 +2,7 @@ from typing import Tuple
 
 import numpy as np
 
-from intersects.bounding_box import RandomBoundingBoxGenerator, BoundingBoxComposer
+from intersects.bounding_box import RandomBoundingBoxGenerator, BoundingBoxComposer, ImageEmbeddedBoundingBox
 from intersects.util import plot_uniform_image_montage, progress
 
 
@@ -24,13 +24,27 @@ def rectangle_montage_demo(n_images: int = 4, n_boxes_per_image: int = 40, image
     plot_uniform_image_montage(images=images, title='Rectangle Montage', numbering=titles)
 
 
+# ----------------------------------------------------------------------------------------------------------------------
+#                                                
+# ----------------------------------------------------------------------------------------------------------------------
+
 def intersection_algorithm_alignment_test(n_cases=1000000, image_size=(64, 64)):
     box_generator = RandomBoundingBoxGenerator(image_size=image_size, is_square=False)
     for _ in progress(range(n_cases), unit='intersections'):
         box1, box2 = box_generator(), box_generator()
-        assert box1.intersects(box2) == box1.pixel_intersects(box2)
+        assert box1.boundary_exclusive_intersection(box2) == box1.pixel_intersects(box2)
+
+
+def exclusive_vs_inclusive_boundary_test():
+    bbox1 = ImageEmbeddedBoundingBox((10, 10, 20, 20))
+    bbox2 = ImageEmbeddedBoundingBox((20, 20, 30, 30))
+    print(bbox1.pixel_intersects(bbox2))
+    print(bbox1.boundary_exclusive_intersection(bbox2))
+    print(bbox1.boundary_inclusive_intersection(bbox2))
+    plot_uniform_image_montage(images=[np.array(BoundingBoxComposer.compose([bbox1, bbox2]))])
 
 
 if __name__ == '__main__':
-    # intersections_are_aligned_test()
+    # exclusive_vs_inclusive_boundary_test()
+    # intersection_algorithm_alignment_test()
     rectangle_montage_demo()
